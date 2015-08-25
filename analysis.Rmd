@@ -1,0 +1,53 @@
+---
+title: "Analysis"
+output: html_document
+---
+
+Take a look at a few different gambling strategies...it was bothering me so I had to see what the results would look like.
+
+# Source
+Load the things it needs.
+
+```{r load, echo=FALSE, results='hide'}
+library(ggplot2)
+
+source('runner.R')
+sapply(list.files('methods', pattern = '.R', full.names = T), source)
+```
+
+# Run 
+Run the different algorithms a bunch
+
+```{r run}
+martingale_results <- sapply(1:1e4, function(x) {
+	result <- run_method(martingale(stop_threshold = 1000))
+	result[length(result)]
+})
+
+martingale_stop_results <- sapply(1:1e4, function(x) {
+	result <- run_method(martingale(stop_threshold = 2))
+	result[length(result)]
+})
+
+nottingale_results <- sapply(1:1e4, function(x) {
+	result <- run_method(nottingale(stop_threshold = 2))
+	result[length(result)]
+})
+
+results <- rbind(
+	data.frame(result = martingale_results, method = 'martingale'),
+	data.frame(result = martingale_stop_results, method = 'martingale_stop'),
+	data.frame(result = nottingale_results, method = 'nottingale')
+)
+```
+
+# Plot
+Look at the plots
+
+```{r plots}
+g <- ggplot(results, aes(x = result, fill = method)) + 
+	geom_density(alpha = .5)
+print(g)
+```
+
+Doubling on wins looks like it gives a lower low and a higher high if you have a stop.  Without a stop, doubling on losses gives you a higher max.
